@@ -1,0 +1,5 @@
+1. support output graphml string
+2. support complex types
+3. replace the parser from nokogiri to rexml ... ? 
+
+

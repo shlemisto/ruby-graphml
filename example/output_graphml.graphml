@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <graphml>
+        <key id="k1" for="node" attr.name="color" attr.type="string">
+            <default>yellow</default>
+        </key>
+        <graph id="abc">
+            <node id="n0">
+                <data key="k1">
+                    abc  
+                </data>
+            </node>
+            <node id="n1"/>
+            <edge source="n0" target="n1" id="e0" directed="true "/>
+        </graph>
+    </graphml>
