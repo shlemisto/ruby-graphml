@@ -38,11 +38,11 @@ class GraphML
     end 
     	
     def source
-      @graph.nodes[self[:source]]
+      @graph.get_or_new_node self[:source]
     end
     
     def target
-      @graph.nodes[self[:target]]
+      @graph.get_or_new_node self[:target]
     end
    
     def elements
@@ -184,11 +184,24 @@ class GraphML
 
     def add_node attrs={}
       attrs={:id => attrs} if attrs.kind_of? String
-    	node = Node.new attrs,self
-    	node[:id]="n"+nodes.count.to_s unless node[:id]
-    	@nodes[node[:id]]=node
+      node =@nodes[attrs[:id]] 
+      if node.nil?
+      	node = Node.new attrs,self  
+      	node[:id]="n"+nodes.count.to_s unless node[:id]
+      	@nodes[node[:id]]=node
+      else
+        node<<attrs
+      end
+      
       yield( node ) if block_given?
     	node
+    end
+    
+    def get_or_new_node id
+      node=@nodes[id.to_sym]
+      node =add_node(id) unless node
+      yield( node ) if block_given?
+      node
     end
 
     def add_edge *attrs 
@@ -215,12 +228,18 @@ end
 
 class GraphML
     VERSION = "1.0.0"
+    DEFAULT_NS ={
+                   :xmlns => "http://graphml.graphdrawing.org/xmlns",
+                   :"xmlns:xsi" =>"http://www.w3.org/2001/XMLSchema-instance",
+                   :"xsi:schemaLocation"=>"http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
+                }
     attr_accessor :graph
     include GraphML::ExtCore    
 
     def initialize file_or_str="" 
         @data={}
         @keys={}
+        self<<DEFAULT_NS
         Parser.new file_or_str,self if file_or_str and file_or_str.length>0
         yield( self ) if block_given?
     end
