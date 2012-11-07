@@ -13,12 +13,14 @@ class GraphML
     include GraphML::ExtCore
     def initialize(attrs={})
      self<<attrs      
+     @text=nil
      yield( self ) if block_given?
     end
   end
 
   class Edge
     include GraphML::ExtCore
+    attr_accessor :data,:graph
     def initialize(attrs, graph)
       @graph = graph
       @data ={}
@@ -54,6 +56,7 @@ class GraphML
 
   class Hyperedge
     include GraphML::ExtCore
+    attr_accessor :endpoints,:graph
     def initialize(attrs, graph)
       @graph=graph
       self<<attrs
@@ -108,7 +111,7 @@ class GraphML
   end
 
   class Node
-    attr_accessor :in_edges, :out_edges
+    attr_accessor :in_edges, :out_edges,:subgraphs,:data,:ports,:graph
     include GraphML::ExtCore
     def initialize(attrs, graph)
       @graph = graph
@@ -145,6 +148,17 @@ class GraphML
       yield( data ) if block_given?
       data
     end 
+
+    def get_or_new_data *attrs
+      attrs,text=attrs
+      attrs={:key => attrs} if attrs.kind_of? String
+      data=@data[attrs[:key]]
+      data=Data.new attrs,text if data.nil?
+      @data[data[:key]]=data
+      yield( data ) if block_given?
+      data
+    end 
+
     
     def add_graph attrs={}
       attrs={:id => attrs} if attrs.kind_of? String
@@ -204,6 +218,7 @@ class GraphML
       node
     end
 
+
     def add_edge *attrs 
       source,target= attrs
       source={:source => source,:target=>target} if source.kind_of? String
@@ -233,7 +248,7 @@ class GraphML
                    :"xmlns:xsi" =>"http://www.w3.org/2001/XMLSchema-instance",
                    :"xsi:schemaLocation"=>"http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
                 }
-    attr_accessor :graph
+    attr_accessor :graph,:data,:keys
     include GraphML::ExtCore    
 
     def initialize file_or_str="" 
@@ -262,6 +277,13 @@ class GraphML
       yield( key ) if block_given?
       key
     end 
+
+    def get_or_new_key id
+      key=@keys[id.to_sym]
+      key =add_key(id) unless key
+      yield( key ) if block_given?
+      key
+    end
 
     def add_data attrs={},text
       attrs={:key => attrs} if attrs.kind_of? String

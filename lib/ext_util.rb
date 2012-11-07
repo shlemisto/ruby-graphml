@@ -36,14 +36,14 @@ class GraphML
 				@attrs.each{|key,value|
 			            xml<<" "<<key.to_s<<"="<<%Q{"#{value.to_s}"}  
 						} if @attrs
-	            if(elements.nil? and !self.respond_to?("text"))
+	            if(elements.nil? and !self.respond_to?("text") )
 	                    xml<<"/>"<<"\n"
 	            else	
 	            	xml<<">"<<"\n"
 					elements.each{ |item|
 						  xml<<item.to_xml(@indent)
-					} if elements 
-					xml<<@indent<<defaultindent<<self.text<<"\n" if self.respond_to?("text")
+					} 
+					xml<<@indent<<defaultindent<<self.text<<"\n" if self.respond_to?("text") and self.text
 					xml<<@indent<<"</"<<classname<<">"<<"\n"
 			    end
 		    xml
