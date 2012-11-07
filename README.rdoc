@@ -8,7 +8,7 @@ graph=graphml.graph
 graphml.output :file=>"abc.graphml" 
 
  
-=============with ruby style to create graphml objects================= 
+with ruby style to create graphml objects 
  
 GraphML.new do |graphml|
 	graphml.add_key("k1"){|k|

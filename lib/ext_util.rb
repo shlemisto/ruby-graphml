@@ -42,7 +42,7 @@ class GraphML
 	            	xml<<">"<<"\n"
 					elements.each{ |item|
 						  xml<<item.to_xml(@indent)
-					} 
+					} if elements
 					xml<<@indent<<defaultindent<<self.text<<"\n" if self.respond_to?("text") and self.text
 					xml<<@indent<<"</"<<classname<<">"<<"\n"
 			    end

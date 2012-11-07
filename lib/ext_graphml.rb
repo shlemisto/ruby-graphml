@@ -111,11 +111,12 @@ class GraphML
   end
 
   class Node
-    attr_accessor :in_edges, :out_edges,:subgraphs,:data,:ports,:graph
+    attr_accessor :in_edges, :out_edges,:subgraphs,:data,:ports,:graph,:bind
     include GraphML::ExtCore
     def initialize(attrs, graph)
       @graph = graph
       self<<attrs
+      @bind={}
       @data = {}
       @subgraphs ={}
       @ports ={}
