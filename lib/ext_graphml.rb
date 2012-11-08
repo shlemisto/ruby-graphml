@@ -151,9 +151,9 @@ class GraphML
     end 
 
 
-    def add_key_and_data key,data,type="string"
-        key=graphml.get_or_new_key key+"key"
-        key<<{:for=>"node", :"attr.name"=>key, :"attr.type"=>type}
+    def add_key_and_data keyname,data,type="string"
+        key=graphml.get_or_new_key keyname+"key"
+        key<<{:for=>"node", :"attr.name"=>keyname, :"attr.type"=>type}
         get_or_new_data key[:id],data
         self
     end
