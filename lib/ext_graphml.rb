@@ -150,6 +150,26 @@ class GraphML
       data
     end 
 
+
+    def add_key_and_data key,data,type="string"
+        key=graphml.get_or_new_key key+"key"
+        key<<{:for=>"node", :"attr.name"=>key, :"attr.type"=>type}
+        get_or_new_data key[:id],data
+        self
+    end
+
+    def graphml
+        parent=@graph.parent
+
+        if parent.kind_of?GraphML or parent.nil?
+          parent
+        else
+            #parent is node
+            parent.graphml
+        end
+    end
+
+
     def get_or_new_data *attrs
       attrs,text=attrs
       attrs={:key => attrs} if attrs.kind_of? String
@@ -163,7 +183,7 @@ class GraphML
     
     def add_graph attrs={}
       attrs={:id => attrs} if attrs.kind_of? String
-    	graph=Graph.new attrs
+    	graph=Graph.new attrs,self
     	@subgraphs[graph[:id]]=graph
       yield( graph ) if block_given?
       graph
@@ -178,9 +198,10 @@ class GraphML
   end
   
   class Graph
-    attr_accessor :nodes, :edges, :id, :edgedefault
+    attr_accessor :nodes, :edges, :id, :edgedefault,:parent
     include GraphML::ExtCore
-    def initialize attrs={}
+    def initialize *attrs
+      attrs,@parent=attrs
       self<<attrs      
       @nodes = {}
       @edges = {}
@@ -189,6 +210,7 @@ class GraphML
 
     end
     
+
     def elements
       e=[]
       e.concat @nodes.values
@@ -262,7 +284,7 @@ class GraphML
  
     def add_graph attrs={}
       attrs={:id => attrs} if attrs.kind_of? String
-      @graph=Graph.new attrs
+      @graph=Graph.new attrs,self
       yield( @graph ) if block_given?
       @graph
     end
