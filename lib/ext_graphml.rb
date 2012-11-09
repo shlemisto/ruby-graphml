@@ -168,13 +168,23 @@ class GraphML
             parent.graphml
         end
     end
-
+    def data_by_attrname name
+       k=""
+       graphml.keys.each{|id,key|
+                  if key[:"attr.name"].strip==name.strip
+                    k=key[:id]
+                    break
+                  end   
+           }
+       data[k]    
+    end
 
     def get_or_new_data *attrs
       attrs,text=attrs
       attrs={:key => attrs} if attrs.kind_of? String
       data=@data[attrs[:key]]
       data=Data.new attrs,text if data.nil?
+      data.text=text
       @data[data[:key]]=data
       yield( data ) if block_given?
       data
@@ -315,6 +325,17 @@ class GraphML
       yield( data ) if block_given?
       data
     end 
+
+    def data_by_attrname name
+       k=""
+       keys.each{|id,key|
+                  if key[:"attr.name"].strip==name.strip
+                    k=key[:id]
+                    break
+                  end   
+           }
+       data[k]    
+    end
 
     def elements
       e=[]
