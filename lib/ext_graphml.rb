@@ -171,7 +171,9 @@ class GraphML
     def data_by_attrname name
        k=""
        graphml.keys.each{|id,key|
-                  if key[:"attr.name"].strip==name.strip
+                  attrname=key[:"attr.name"]
+                  next if attrname.nil?
+                  if attrname.strip==name.strip
                     k=key[:id]
                     break
                   end   
