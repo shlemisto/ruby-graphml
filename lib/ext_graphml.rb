@@ -25,8 +25,8 @@ class GraphML
       @graph = graph
       @data ={}
       self<<attrs
-      source.out_edges << self
-      target.in_edges << self
+      # source.out_edges << self
+      # target.in_edges << self
       yield( self ) if block_given?
     end
     
@@ -40,11 +40,11 @@ class GraphML
     end 
     	
     def source
-      @graph.get_or_new_node self[:source]
+      @graph.graphml.nodes[self[:source]]
     end
     
     def target
-      @graph.get_or_new_node self[:target]
+      @graph.graphml.nodes[self[:target]]
     end
    
     def elements
@@ -111,7 +111,7 @@ class GraphML
   end
 
   class Node
-    attr_accessor :in_edges, :out_edges,:subgraphs,:data,:ports,:graph,:bind
+    attr_accessor :subgraphs,:data,:ports,:graph,:bind
     include GraphML::ExtCore
     def initialize(attrs, graph)
       @graph = graph
@@ -125,6 +125,24 @@ class GraphML
       yield( self ) if block_given?
     end
     
+    def in_edges
+      r=[]
+      edges=graphml.edges
+      edges.each{|edge|
+               r<<edge.target if edge.target==self
+      }
+      r
+    end
+
+    def out_edges
+      r=[]
+      edges=graphml.edges
+      edges.each{|edge|
+               r<<edge.source if edge.source==self
+      }
+      r
+    end
+
     def elements
       e=[]
       e.concat @data.values
@@ -222,6 +240,15 @@ class GraphML
 
     end
     
+    def graphml
+        parent=@parent
+        if parent.kind_of?GraphML  
+          parent
+        else
+            #parent is node
+            parent.graphml
+        end
+    end
 
     def elements
       e=[]
@@ -241,13 +268,13 @@ class GraphML
       else
         node<<attrs
       end
-      
+      graphml.nodes[node[:id]]=node
       yield( node ) if block_given?
     	node
     end
     
     def get_or_new_node id
-      node=@nodes[id.to_sym]
+      node=graphml.nodes[id.to_s]
       node =add_node(id) unless node
       yield( node ) if block_given?
       node
@@ -260,6 +287,7 @@ class GraphML
     	edge=Edge.new source,self
     	edge[:id]=("e"+edges.count.to_s) if edge[:id].nil?
     	@edges[edge[:id]]=edge
+      graphml.edges[edge[:id]]=edge
       yield( edge ) if block_given?
     	edge
     end
@@ -283,12 +311,14 @@ class GraphML
                    :"xmlns:xsi" =>"http://www.w3.org/2001/XMLSchema-instance",
                    :"xsi:schemaLocation"=>"http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
                 }
-    attr_accessor :graph,:data,:keys
+    attr_accessor :graph,:data,:keys,:nodes,:edges
     include GraphML::ExtCore    
 
     def initialize file_or_str="" 
         @data={}
         @keys={}
+        @nodes={}
+        @edges={}
         self<<DEFAULT_NS
         Parser.new file_or_str,self if file_or_str and file_or_str.length>0
         yield( self ) if block_given?
@@ -300,6 +330,7 @@ class GraphML
       yield( @graph ) if block_given?
       @graph
     end
+     
 
     def add_key attrs={}
       attrs={:id => attrs} if attrs.kind_of? String
