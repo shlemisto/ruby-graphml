@@ -11,9 +11,11 @@ class GraphML
   class Key
     attr_accessor :text
     include GraphML::ExtCore
-    def initialize(attrs={})
+    def initialize *arg
+      attrs,default=arg
+      attrs||={}
      self<<attrs      
-     @text=nil
+     @text=default
      yield( self ) if block_given?
     end
   end
@@ -21,7 +23,8 @@ class GraphML
   class Edge
     include GraphML::ExtCore
     attr_accessor :data,:graph
-    def initialize(attrs, graph)
+    def initialize *arg
+      attrs, graph=arg
       @graph = graph
       @data ={}
       self<<attrs
@@ -35,6 +38,17 @@ class GraphML
       attrs={:key => attrs} if attrs.kind_of? String
     	data=Data.new attrs,text
     	@data[data[:key]]=data
+      yield( data ) if block_given?
+      data
+    end 
+
+     def get_or_new_data *attrs
+      attrs,text=attrs
+      attrs={:key => attrs} if attrs.kind_of? String
+      data=@data[attrs[:key]]
+      data=Data.new attrs,text if data.nil?
+      data.text=text
+      @data[data[:key]]=data
       yield( data ) if block_given?
       data
     end 
@@ -57,7 +71,8 @@ class GraphML
   class Hyperedge
     include GraphML::ExtCore
     attr_accessor :endpoints,:graph
-    def initialize(attrs, graph)
+    def initialize *arg
+      attrs, graph=arg
       @graph=graph
       self<<attrs
       @endpoints={}
@@ -81,7 +96,8 @@ class GraphML
 
   class EndPoint
     include GraphML::ExtCore
-    def initialize(attrs)
+    def initialize *arg
+      attrs=arg.first
       self<<attrs
       yield( self ) if block_given?
     end 
@@ -90,7 +106,9 @@ class GraphML
   class Data
   	 include GraphML::ExtCore
      attr_accessor :text
-  	 def initialize(attrs ={},text)
+  	 def initialize *arg
+       attrs,text=arg
+       attrs||={}
   	 	 self<<attrs
        @text=text
        yield( self ) if block_given?
@@ -100,11 +118,16 @@ class GraphML
   	 	graph.keys[:name]
   	 end
 
+     def cdata= value
+      @text="<![CDATA["+value.to_s+"]]>"
+     end 
+
   end 
 
   class Port 
     include GraphML::ExtCore
-    def initialize(attrs)
+    def initialize *arg
+      attrs=arg.first
       self<<attrs
       yield( self ) if block_given?
     end
@@ -113,7 +136,8 @@ class GraphML
   class Node
     attr_accessor :subgraphs,:data,:ports,:graph,:bind
     include GraphML::ExtCore
-    def initialize(attrs, graph)
+    def initialize *arg
+      attrs, graph=arg
       @graph = graph
       self<<attrs
       @bind={}
@@ -169,10 +193,11 @@ class GraphML
     end 
 
 
-    def add_key_and_data keyname,data,type="string"
+    def add_key_and_data keyname,data,type="string",&block
         key=graphml.get_or_new_key keyname+"key"
         key<<{:for=>"node", :"attr.name"=>keyname, :"attr.type"=>type}
-        get_or_new_data key[:id],data
+        data=get_or_new_data key[:id],data
+        block.call key,data if block
         self
     end
 
@@ -186,11 +211,14 @@ class GraphML
             parent.graphml
         end
     end
-    def data_by_attrname name
+    def data_by_attrname name,attr_name="attr.name"
        k=""
        graphml.keys.each{|id,key|
-                  attrname=key[:"attr.name"]
+                  
+                  attrname=key[attr_name.to_sym]
+
                   next if attrname.nil?
+
                   if attrname.strip==name.strip
                     k=key[:id]
                     break
@@ -209,6 +237,7 @@ class GraphML
       yield( data ) if block_given?
       data
     end 
+
 
     
     def add_graph attrs={}
@@ -314,7 +343,9 @@ class GraphML
     attr_accessor :graph,:data,:keys,:nodes,:edges
     include GraphML::ExtCore    
 
-    def initialize file_or_str="" 
+    def initialize *arg
+        file_or_str=arg.first
+        file_or_str||=""
         @data={}
         @keys={}
         @nodes={}
@@ -330,7 +361,6 @@ class GraphML
       yield( @graph ) if block_given?
       @graph
     end
-     
 
     def add_key attrs={}
       attrs={:id => attrs} if attrs.kind_of? String

@@ -71,7 +71,14 @@ class GraphML
 
       def graphml_graph_data( node ) #:nodoc:
         begin
-          data=@current_graph.add_data to_hash(node.attributes),node.texts().join('\n')
+          if node.elements.size>0
+            text=""
+            node.elements.each{|elem| text<<elem.to_s<<"\n"}
+          else
+            text=node.texts().join('\n')
+          end
+
+          data=@current_graph.add_data to_hash(node.attributes),text
         rescue ArgumentError => e
           warn e
         end
@@ -97,7 +104,13 @@ class GraphML
 
       def graphml_graph_node_data( node ) #:nodoc:
         begin
-          @current_node.add_data to_hash(node.attributes),node.texts().join('\n')
+          if node.elements.size>0
+            text=""
+            node.elements.each{|elem| text<<elem.to_s<<"\n"}
+          else
+            text=node.texts().join('\n')
+          end
+          @current_node.add_data to_hash(node.attributes),text
         rescue ArgumentError => e
           warn e
         end
