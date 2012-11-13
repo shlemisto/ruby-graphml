@@ -257,7 +257,7 @@ class GraphML
   end
   
   class Graph
-    attr_accessor :nodes, :edges, :id, :edgedefault,:parent
+    attr_accessor :nodes, :edges, :id, :edgedefault,:parent,:bind
     include GraphML::ExtCore
     def initialize *attrs
       attrs,@parent=attrs
