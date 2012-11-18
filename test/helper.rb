@@ -9,10 +9,14 @@ rescue Bundler::BundlerError => e
 end
 require 'test/unit'
 require 'shoulda'
+ 
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'ruby-graphml'
-
+ 
 class Test::Unit::TestCase
+	 def i where,infor
+	 	puts "['#{where}']==>#{infor}"
+	 end
 end

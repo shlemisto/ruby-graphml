@@ -106,10 +106,8 @@ class GraphML
   class Data
   	 include GraphML::ExtCore
      attr_accessor :text
-  	 def initialize *arg
-       attrs,text=arg
-       attrs||={}
-  	 	 self<<attrs
+  	 def initialize keyname,text="" 
+  	 	 self<<{:key=>keyname} if keyname
        @text=text
        yield( self ) if block_given?
   	 end
@@ -136,10 +134,9 @@ class GraphML
   class Node
     attr_accessor :subgraphs,:data,:ports,:graph,:bind
     include GraphML::ExtCore
-    def initialize *arg
-      attrs, graph=arg
+    def initialize nodename=nil,graph=nil
       @graph = graph
-      self<<attrs
+      self<<{:id=>nodename} if nodename
       @bind={}
       @data = {}
       @subgraphs ={}
@@ -183,13 +180,11 @@ class GraphML
       port
     end
       
-    def add_data *attrs 
-      attrs,text=attrs
-      if attrs.is_a? Data
-        data=attrs
+    def add_data datakey,text="" 
+      if datakey.is_a? GraphML::Data
+        data=datakey
       else
-        attrs={:key => attrs} if attrs.kind_of? String
-        data=Data.new attrs,text
+        data=Data.new datakey,text
       end
       @data[data[:key]]=data
       yield( data ) if block_given?
@@ -244,12 +239,12 @@ class GraphML
 
 
     
-    def add_graph attrs={}
-      if attrs.is_a? Graph
-         attrs.parent=self
+    def add_graph graph_or_id
+      if graph_or_id.is_a? GraphML::Graph
+         graph=graph_or_id
+         graph.parent=self
       else
-        attrs={:id => attrs} if attrs.kind_of? String
-      	graph=Graph.new attrs,self
+      	graph=Graph.new graph_or_id,self
       end
 
     	@subgraphs[graph[:id]]=graph
@@ -266,11 +261,11 @@ class GraphML
   end
   
   class Graph
-    attr_accessor :nodes, :edges, :id, :edgedefault,:parent,:bind
+    attr_accessor :nodes, :edges, :edgedefault,:parent,:bind
     include GraphML::ExtCore
-    def initialize *attrs
-      attrs,@parent=attrs
-      self<<attrs      
+    def initialize id=nil,parent=nil
+      @parent=parent
+      self<<{:id=>id} if id     
       @nodes = {}
       @edges = {}
       @hyperedges ={}
@@ -296,24 +291,31 @@ class GraphML
       e.count>0 ? e : nil
     end
 
-    def add_node attrs={}
+    def allsubnodes
+      r={} 
+      nodes.each{|key,node|
+            node.subgraphs.each{|k,subgraph|
+               r.merge! subgraph.allsubnodes
+             }
+      }
+      r.merge! nodes
+    end
 
-      if attrs.is_a? Node
-        node=attrs
+    def add_node nodename
+      
+      if nodename.is_a? GraphML::Node
+        node=nodename
         node.graph=self
       else
-        attrs={:id => attrs} if attrs.kind_of? String
-        node =@nodes[attrs[:id]] 
+        node =@nodes[nodename] 
         if node.nil?
-        	node = Node.new attrs,self  
-        else
-          node<<attrs
+        	node = Node.new nodename,self  
         end
       end
       
       node[:id]="n"+nodes.count.to_s unless node[:id]
       @nodes[node[:id]]=node
-      graphml.nodes[node[:id]]=node
+      
       yield( node ) if block_given?
     	node
     end
@@ -328,7 +330,7 @@ class GraphML
 
     def add_edge *attrs 
       source,target= attrs
-      if source.is_a? Edge
+      if source.is_a? GraphML::Edge
       edge=source
       edge.graph=self
       else
@@ -361,7 +363,8 @@ class GraphML
                    :"xmlns:xsi" =>"http://www.w3.org/2001/XMLSchema-instance",
                    :"xsi:schemaLocation"=>"http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
                 }
-    attr_accessor :graph,:data,:keys,:nodes,:edges
+    attr_accessor :data,:keys,:nodes,:edges
+    attr_reader :graph
     include GraphML::ExtCore    
 
     def initialize *arg
@@ -369,18 +372,42 @@ class GraphML
         file_or_str||=""
         @data={}
         @keys={}
-        @nodes={}
         @edges={}
         self<<DEFAULT_NS
         Parser.new file_or_str,self if file_or_str and file_or_str.length>0
         yield( self ) if block_given?
     end
+
+    def nodes
+        @graph.allsubnodes if @graph
+    end
  
     def add_graph attrs={}
-      attrs={:id => attrs} if attrs.kind_of? String
-      @graph=Graph.new attrs,self
+      if attrs.is_a? GraphML::Graph
+        graph=attrs
+        graph.parent=self
+      else
+        attrs={:id => attrs} if attrs.kind_of? String
+        graph=Graph.new attrs,self
+      end
+      @graph=graph
       yield( @graph ) if block_given?
       @graph
+    end
+
+    def auto_key_generate
+      nodes.each{|k,node| 
+                  node.data.each{|key,data|
+                         add_key({:id=>key,:for=>"node", :"attr.name"=>key,:"attr.type"=>"string"}) unless keys.has_key? key
+                  }
+                }
+      edges.each{|k,edge| 
+                  edge.data.each{|key,data|
+                         add_key({:id=>key,:for=>"edge", :"attr.name"=>key,:"attr.type"=>"string"}) unless keys.has_key? key
+                                }
+                }
+      self
+
     end
 
     def add_key attrs={}
@@ -434,4 +461,10 @@ class GraphML
           f2.puts to_xml
         end 
     end 
+
+    def to_file name
+       File.open(name, 'w') do |f2|  
+          f2.puts to_xml
+        end 
+    end
 end
