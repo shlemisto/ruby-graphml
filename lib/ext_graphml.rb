@@ -185,8 +185,12 @@ class GraphML
       
     def add_data *attrs 
       attrs,text=attrs
-      attrs={:key => attrs} if attrs.kind_of? String
-      data=Data.new attrs,text
+      if attrs.is_a? Data
+        data=attrs
+      else
+        attrs={:key => attrs} if attrs.kind_of? String
+        data=Data.new attrs,text
+      end
       @data[data[:key]]=data
       yield( data ) if block_given?
       data
@@ -194,7 +198,7 @@ class GraphML
 
 
     def add_key_and_data keyname,data,type="string",&block
-        key=graphml.get_or_new_key keyname+"key"
+        key=graphml.get_or_new_key keyname
         key<<{:for=>"node", :"attr.name"=>keyname, :"attr.type"=>type}
         data=get_or_new_data key[:id],data
         block.call key,data if block
@@ -241,8 +245,13 @@ class GraphML
 
     
     def add_graph attrs={}
-      attrs={:id => attrs} if attrs.kind_of? String
-    	graph=Graph.new attrs,self
+      if attrs.is_a? Graph
+         attrs.parent=self
+      else
+        attrs={:id => attrs} if attrs.kind_of? String
+      	graph=Graph.new attrs,self
+      end
+
     	@subgraphs[graph[:id]]=graph
       yield( graph ) if block_given?
       graph
@@ -288,15 +297,22 @@ class GraphML
     end
 
     def add_node attrs={}
-      attrs={:id => attrs} if attrs.kind_of? String
-      node =@nodes[attrs[:id]] 
-      if node.nil?
-      	node = Node.new attrs,self  
-      	node[:id]="n"+nodes.count.to_s unless node[:id]
-      	@nodes[node[:id]]=node
+
+      if attrs.is_a? Node
+        node=attrs
+        node.graph=self
       else
-        node<<attrs
+        attrs={:id => attrs} if attrs.kind_of? String
+        node =@nodes[attrs[:id]] 
+        if node.nil?
+        	node = Node.new attrs,self  
+        else
+          node<<attrs
+        end
       end
+      
+      node[:id]="n"+nodes.count.to_s unless node[:id]
+      @nodes[node[:id]]=node
       graphml.nodes[node[:id]]=node
       yield( node ) if block_given?
     	node
@@ -312,8 +328,13 @@ class GraphML
 
     def add_edge *attrs 
       source,target= attrs
+      if source.is_a? Edge
+      edge=source
+      edge.graph=self
+      else
       source={:source => source,:target=>target} if source.kind_of? String
     	edge=Edge.new source,self
+      end
     	edge[:id]=("e"+edges.count.to_s) if edge[:id].nil?
     	@edges[edge[:id]]=edge
       graphml.edges[edge[:id]]=edge
