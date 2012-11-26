@@ -17,6 +17,6 @@ require 'ruby-graphml'
  
 class Test::Unit::TestCase
 	 def i where,infor
-	 	puts "['#{where}']==>#{infor}"
+	 	p "['#{where}']==>#{infor}"
 	 end
 end

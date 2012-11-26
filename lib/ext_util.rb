@@ -17,6 +17,10 @@ class GraphML
 			@attrs={} unless @attrs
 			@attrs=@attrs.merge attrs if attrs
 		end  
+
+		def attrs
+			 @attrs
+		end
         
         def classname
         	self.class.name.downcase.split("::").last

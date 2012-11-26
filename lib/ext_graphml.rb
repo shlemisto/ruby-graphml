@@ -23,24 +23,29 @@ class GraphML
   class Edge
     include GraphML::ExtCore
     attr_accessor :data,:graph
-    def initialize *arg
-      attrs, graph=arg
-      @graph = graph
+    def initialize source=nil,target=nil,graphv=nil
+      @graph = graphv
+      @graph.add_edge self if @graph
       @data ={}
-      self<<attrs
+      self[:source]=source
+      self[:target]=target
       # source.out_edges << self
       # target.in_edges << self
       yield( self ) if block_given?
     end
-    
-    def add_data *attrs 
-      attrs,text=attrs
-      attrs={:key => attrs} if attrs.kind_of? String
-    	data=Data.new attrs,text
-    	@data[data[:key]]=data
+
+
+     def add_data datakey,text="" 
+      if datakey.is_a? GraphML::Data
+        data=datakey
+      else
+        data=Data.new datakey,text
+      end
+      @data[data[:key]]=data
       yield( data ) if block_given?
       data
     end 
+
 
      def get_or_new_data *attrs
       attrs,text=attrs
@@ -261,7 +266,7 @@ class GraphML
   end
   
   class Graph
-    attr_accessor :nodes, :edges, :edgedefault,:parent,:bind
+    attr_accessor :nodes, :edges, :hyperedges,:edgedefault,:parent,:bind
     include GraphML::ExtCore
     def initialize id=nil,parent=nil
       @parent=parent
@@ -301,6 +306,17 @@ class GraphML
       r.merge! nodes
     end
 
+    def allsubedges
+      r={} 
+      nodes.each{|key,node|
+            node.subgraphs.each{|k,subgraph|
+               r.merge! subgraph.allsubedges
+             }
+      }
+      r.merge! edges
+    end
+
+
     def add_node nodename
       
       if nodename.is_a? GraphML::Node
@@ -331,15 +347,18 @@ class GraphML
     def add_edge *attrs 
       source,target= attrs
       if source.is_a? GraphML::Edge
-      edge=source
-      edge.graph=self
+        edge=source
+        edge.graph=self
       else
-      source={:source => source,:target=>target} if source.kind_of? String
-    	edge=Edge.new source,self
+       	edge=Edge.new(source,target,self) if  source.is_a? String
+        if  source.is_a? Hash
+          edge=Edge.new("","",self) 
+          edge<<source
+        end
+        edge
       end
-    	edge[:id]=("e"+edges.count.to_s) if edge[:id].nil?
+    	edge[:id]=("#{self[:id]}::e"+edges.count.to_s) if edge[:id].nil?
     	@edges[edge[:id]]=edge
-      graphml.edges[edge[:id]]=edge
       yield( edge ) if block_given?
     	edge
     end
@@ -381,14 +400,19 @@ class GraphML
     def nodes
         @graph.allsubnodes if @graph
     end
+
+     def edges
+        @graph.allsubedges if @graph
+     end
  
     def add_graph attrs={}
       if attrs.is_a? GraphML::Graph
         graph=attrs
         graph.parent=self
       else
-        attrs={:id => attrs} if attrs.kind_of? String
-        graph=Graph.new attrs,self
+        attrs={:id => attrs} if attrs.is_a? String
+        graph=Graph.new attrs[:id],self
+        graph<<attrs
       end
       @graph=graph
       yield( @graph ) if block_given?
@@ -398,12 +422,30 @@ class GraphML
     def auto_key_generate
       nodes.each{|k,node| 
                   node.data.each{|key,data|
-                         add_key({:id=>key,:for=>"node", :"attr.name"=>key,:"attr.type"=>"string"}) unless keys.has_key? key
+                         dataattr=data.attrs.clone
+                         type=dataattr[:type]
+                         if type.nil? or type!="custom"
+                          type="string" if type.nil?
+                          dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+                         end
+                         dataattr.delete :key
+                         dataattr.delete :type
+                         dataattr.merge! :id=>key,:for=>"node" 
+                         add_key(dataattr) unless keys.has_key? key
                   }
                 }
       edges.each{|k,edge| 
                   edge.data.each{|key,data|
-                         add_key({:id=>key,:for=>"edge", :"attr.name"=>key,:"attr.type"=>"string"}) unless keys.has_key? key
+                                    dataattr=data.attrs.clone
+                                    type=dataattr[:type]
+                                    if type.nil? or type!="custom"
+                                     type="string" if type.nil?
+                                     dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+                                    end
+                                    dataattr.delete :key
+                                    dataattr.delete :type
+                                    dataattr.merge! :id=>key,:for=>"edge" 
+                                    add_key(dataattr) unless keys.has_key? key
                                 }
                 }
       self
