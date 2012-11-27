@@ -494,8 +494,8 @@ class GraphML
     end 
 
     def to_file name
-       File.open(name, 'w') do |f2|  
-          f2.puts to_xml
-        end 
+       file=File.open(name, 'w') 
+       file.puts to_xml
+       file 
     end
 end

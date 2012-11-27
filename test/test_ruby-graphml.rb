@@ -67,6 +67,12 @@ class TestRubyGraphml < Test::Unit::TestCase
           assert_not_nil @gml 
     end
 
+    should "to_file" do
+      name="to_file"
+      file=@gml.to_file "test.graphml" 
+       assert_not_nil file
+    end
+
     
     should "add_graph" do
       name="add_graph"
