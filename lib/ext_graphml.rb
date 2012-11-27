@@ -16,7 +16,6 @@ class GraphML
       attrs||={}
      self<<attrs      
      @text=default
-     yield( self ) if block_given?
     end
   end
 
@@ -25,13 +24,12 @@ class GraphML
     attr_accessor :data,:graph
     def initialize source=nil,target=nil,graphv=nil
       @graph = graphv
-      @graph.add_edge self if @graph
+      # @graph.add_edge self if @graph
       @data ={}
       self[:source]=source
       self[:target]=target
       # source.out_edges << self
       # target.in_edges << self
-      yield( self ) if block_given?
     end
 
 
@@ -81,7 +79,6 @@ class GraphML
       @graph=graph
       self<<attrs
       @endpoints={}
-      yield( self ) if block_given?
     end 
 
     def add_endpoint attrs={}
@@ -104,7 +101,6 @@ class GraphML
     def initialize *arg
       attrs=arg.first
       self<<attrs
-      yield( self ) if block_given?
     end 
   end
 
@@ -114,7 +110,6 @@ class GraphML
   	 def initialize keyname,text="" 
   	 	 self<<{:key=>keyname} if keyname
        @text=text
-       yield( self ) if block_given?
   	 end
 
   	 def key name,graph
@@ -132,7 +127,6 @@ class GraphML
     def initialize *arg
       attrs=arg.first
       self<<attrs
-      yield( self ) if block_given?
     end
   end
 
@@ -148,7 +142,6 @@ class GraphML
       @ports ={}
       @in_edges = []
       @out_edges = []
-      yield( self ) if block_given?
     end
     
     def in_edges
@@ -274,7 +267,6 @@ class GraphML
       @nodes = {}
       @edges = {}
       @hyperedges ={}
-      yield( self ) if block_given?
 
     end
     
@@ -391,33 +383,30 @@ class GraphML
         file_or_str||=""
         @data={}
         @keys={}
-        @edges={}
         self<<DEFAULT_NS
         Parser.new file_or_str,self if file_or_str and file_or_str.length>0
-        yield( self ) if block_given?
     end
 
     def nodes
         @graph.allsubnodes if @graph
     end
 
-     def edges
+    def edges
         @graph.allsubedges if @graph
-     end
- 
-    def add_graph attrs={}
-      if attrs.is_a? GraphML::Graph
-        graph=attrs
-        graph.parent=self
-      else
-        attrs={:id => attrs} if attrs.is_a? String
-        graph=Graph.new attrs[:id],self
-        graph<<attrs
-      end
-      @graph=graph
-      yield( @graph ) if block_given?
-      @graph
     end
+
+    def add_graph graph_or_id
+          if graph_or_id.is_a? GraphML::Graph
+             graph=graph_or_id
+             graph.parent=self
+          else
+            graph=Graph.new graph_or_id,self
+          end
+
+          @graph=graph
+          yield( graph ) if block_given?
+          @graph
+    end 
 
     def auto_key_generate
       nodes.each{|k,node| 

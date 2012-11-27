@@ -54,12 +54,14 @@ class GraphML
 
       def graphml_graph( node ) #:nodoc:
         if @current_graph.nil? # parent is graphml
-          @graph = @graphml.add_graph to_hash(node.attributes)
+          @graph = @graphml.add_graph node.attributes["id"] 
+          @graph << to_hash(node.attributes)
           @current_graph = @graph
           previous_graph = @graph
         else # parent is node
           previous_graph = @current_graph
-          @current_graph = @current_node.add_graph to_hash(node.attributes)
+          @current_graph = @current_node.add_graph node.attributes["id"]
+          @current_graph << to_hash(node.attributes)
         end
 
         node.each_element( ) do |child|
@@ -85,7 +87,9 @@ class GraphML
       end
 
       def graphml_graph_node( node ) #:nodoc:
-        @current_node  = @current_graph.add_node to_hash(node.attributes)
+        
+        @current_node  = @current_graph.add_node node.attributes["id"]
+        @current_node << to_hash(node.attributes)
 
         node.each_element( ) do |child|
           case child.name

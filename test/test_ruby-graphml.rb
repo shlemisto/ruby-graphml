@@ -107,11 +107,13 @@ class TestRubyGraphml < Test::Unit::TestCase
 
     
     should "load nested sample" do 
-       name="load nested sample"
+       name="load nested sample111"
     	 gml=GraphML.new "../example/graph_nested.graphml"
     	 # i name, gml.inspect
-    	 # i name, gml.graph.inspect
+    	  i name, gml.to_xml
     	 assert_equal "G",gml.graph[:id]
+       assert_equal true,gml.nodes.has_key?("n0")
+       assert_equal "n5:",gml.nodes["n5"].subgraphs.keys.first
     	 assert_equal 14,gml.nodes.size
     	 assert_equal 12,gml.edges.size
     end 
