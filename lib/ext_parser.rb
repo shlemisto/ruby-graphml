@@ -33,7 +33,8 @@ class GraphML
       end
 
       def graphml_data(node)
-         @graphml.add_data to_hash(node.attributes),node.texts().join("\n")
+         data=@graphml.add_data node.attributes["key"],node.texts().join("\n")
+         data << to_hash(node.attributes)
       end
 
       def graphml_key( node ) #:nodoc:
@@ -80,7 +81,8 @@ class GraphML
             text=node.texts().join('\n')
           end
 
-          data=@current_graph.add_data to_hash(node.attributes),text
+          data=@current_graph.add_data node.attributes["key"],text
+          data << to_hash(node.attributes)
         rescue ArgumentError => e
           warn e
         end
@@ -142,7 +144,8 @@ class GraphML
       def graphml_graph_edge_data( node ) #:nodoc:
         
         begin
-          @current_edge.add_data to_hash(node.attributes),node.texts().join('\n')
+          data=@current_edge.add_data node.attributes["key"],node.texts().join('\n')
+          data<< to_hash(node.attributes) 
         rescue ArgumentError => e
           warn e
         end
