@@ -43,14 +43,14 @@ class GraphML
             begin
               send( "graphml_key_default".to_sym, child )
             rescue NoMethodError => e
-
-              raise GraphMLError, "node #{child.name} can be child of key"
+              p e.to_s
+              raise GraphMLError, "node #{child.name} can not be child of key" 
             end
           end
       end
    
       def graphml_key_default( node ) #:nodoc:
-        @current_key.text << node.texts().join('\n')
+        @current_key.text = node.to_s 
       end
 
       def graphml_graph( node ) #:nodoc:
@@ -116,7 +116,8 @@ class GraphML
           else
             text=node.texts().join('\n')
           end
-          @current_node.add_data to_hash(node.attributes),text
+          data=@current_node.add_data node.attributes["key"],text
+          data<<to_hash(node.attributes)
         rescue ArgumentError => e
           warn e
         end

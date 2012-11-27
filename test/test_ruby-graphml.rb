@@ -64,7 +64,14 @@ class TestRubyGraphml < Test::Unit::TestCase
     
     should "new graphml" do
       name="new graphml"
-          assert_not_nil @gml 
+      assert_not_nil @gml 
+      graphml=GraphML.new "../example/graph_attributes.graphml"
+      s=graphml.to_xml
+      assert_equal 0,s.count("{")
+
+      graphml=GraphML.new s
+      s=graphml.to_xml
+      assert_equal 0,s.count("{")
     end
 
     should "to_file" do
