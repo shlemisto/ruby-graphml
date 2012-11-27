@@ -32,6 +32,9 @@ class GraphML
       # target.in_edges << self
     end
 
+     def destroy
+      @graph.remove_edge self
+     end
 
      def add_data datakey,text="" 
       if datakey.is_a? GraphML::Data
@@ -39,6 +42,7 @@ class GraphML
       else
         data=Data.new datakey,text
       end
+      data.parent=self
       @data[data[:key]]=data
       yield( data ) if block_given?
       data
@@ -55,13 +59,33 @@ class GraphML
       yield( data ) if block_given?
       data
     end 
-    	
+    
+    def data_by_attrname name,attr_name="attr.name"
+       k=""
+       graphml.keys.each{|id,key|
+                  
+                  attrname=key[attr_name.to_sym]
+
+                  next if attrname.nil?
+
+                  if attrname.strip==name.strip
+                    k=key[:id]
+                    break
+                  end   
+           }
+       data[k]    
+    end
+
     def source
       @graph.graphml.nodes[self[:source]]
     end
     
     def target
       @graph.graphml.nodes[self[:target]]
+    end
+
+    def graphml
+      graph.graphml
     end
    
     def elements
@@ -106,15 +130,20 @@ class GraphML
 
   class Data
   	 include GraphML::ExtCore
-     attr_accessor :text
+     attr_accessor :text,:key,:parent
   	 def initialize keyname,text="" 
   	 	 self<<{:key=>keyname} if keyname
        @text=text
   	 end
 
-  	 def key name,graph
-  	 	graph.keys[:name]
-  	 end
+
+     def attrname
+       key["attr.name"]
+     end
+
+     def key
+      @parent.graphml.keys[self[:keyname]]
+     end
 
      def cdata= value
       @text="<![CDATA["+value.to_s+"]]>"
@@ -143,7 +172,11 @@ class GraphML
       @in_edges = []
       @out_edges = []
     end
-    
+
+    def destroy
+       @graph.remove_node self
+    end
+
     def in_edges
       r=[]
       edges=graphml.edges
@@ -184,6 +217,7 @@ class GraphML
       else
         data=Data.new datakey,text
       end
+      data.parent=self
       @data[data[:key]]=data
       yield( data ) if block_given?
       data
@@ -327,6 +361,10 @@ class GraphML
       yield( node ) if block_given?
     	node
     end
+
+    def remove_node node
+      @nodes.delete node[:id]
+    end
     
     def get_or_new_node id
       node=graphml.nodes[id.to_s]
@@ -353,6 +391,10 @@ class GraphML
     	@edges[edge[:id]]=edge
       yield( edge ) if block_given?
     	edge
+    end
+
+    def remove_edge edge
+      @nodes.delete edge[:id]
     end
 
     def add_hyperedge attrs={}
@@ -459,14 +501,23 @@ class GraphML
       yield( key ) if block_given?
       key
     end
+    
 
-    def add_data attrs={},text
-      attrs={:key => attrs} if attrs.kind_of? String
-      data=Data.new attrs,text
+    def add_data datakey,text="" 
+      if datakey.is_a? GraphML::Data
+        data=datakey
+      else
+        data=Data.new datakey,text
+      end
+      data.parent=self
       @data[data[:key]]=data
       yield( data ) if block_given?
       data
     end 
+
+    def graphml
+      self
+    end
 
     def data_by_attrname name
        k=""
