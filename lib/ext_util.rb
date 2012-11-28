@@ -44,7 +44,7 @@ class GraphML
 	                    xml<<"/>"<<"\n"
 	            else	
 	            	xml<<">"
-	            	xml<<self.text<<"\n" if self.respond_to?("text") and self.text
+	            	xml<<self.text  if self.respond_to?("text") and self.text
 					elements.each{ |item|
 						  xml<<item.to_xml(@indent)
 					} if elements
@@ -53,6 +53,8 @@ class GraphML
 			    end
 		    xml
 	    end
+
+
 
    end	 
 end
