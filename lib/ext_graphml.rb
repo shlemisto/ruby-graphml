@@ -77,15 +77,15 @@ class GraphML
     end
 
     def source
-      @graph.graphml.nodes[self[:source]]
+       graphml.nodes[self[:source]]
     end
     
     def target
-      @graph.graphml.nodes[self[:target]]
+       graphml.nodes[self[:target]]
     end
 
     def graphml
-      graph.graphml
+      @graph.graphml
     end
    
     def elements
