@@ -142,7 +142,7 @@ class GraphML
      end
 
      def key
-      @parent.graphml.keys[self[:keyname]]
+      @parent.graphml.keys[self[:key]]
      end
 
      def cdata= value
@@ -394,7 +394,7 @@ class GraphML
     end
 
     def remove_edge edge
-      @nodes.delete edge[:id]
+      @edges.delete edge[:id]
     end
 
     def add_hyperedge attrs={}
@@ -421,12 +421,12 @@ class GraphML
     include GraphML::ExtCore    
 
     def initialize *arg
-        file_or_str=arg.first
-        file_or_str||=""
+        @file_or_str=arg.first
+        @file_or_str||=""
         @data={}
         @keys={}
         self<<DEFAULT_NS
-        Parser.new file_or_str,self if file_or_str and file_or_str.length>0
+        Parser.new @file_or_str,self if @file_or_str and @file_or_str.length>0
     end
 
     def nodes
@@ -539,14 +539,15 @@ class GraphML
     end
 
     def output opt={}
-       File.open(opt[:file], 'w') do |f2|  
-          f2.puts to_xml
+       File.new(opt[:file], 'w') do |f2|  
+          f2.puts self.to_xml
         end 
     end 
 
     def to_file name
-       file=File.open(name, 'w') 
-       file.puts to_xml
+       file=File.new(name, 'w') 
+       file.puts self.to_xml
+       file.close
        file 
     end
 end

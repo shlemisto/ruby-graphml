@@ -143,10 +143,15 @@ class GraphML
       end
 
       def graphml_graph_edge_data( node ) #:nodoc:
-        
         begin
-          data=@current_edge.add_data node.attributes["key"],node.texts().join('\n')
-          data<< to_hash(node.attributes) 
+          if node.elements.size>0
+            text=""
+            node.elements.each{|elem| text<<elem.to_s<<"\n"}
+          else
+            text=node.texts().join('\n')
+          end
+          data=@current_edge.add_data node.attributes["key"],text
+          data<<to_hash(node.attributes)
         rescue ArgumentError => e
           warn e
         end
