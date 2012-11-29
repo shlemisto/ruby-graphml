@@ -35,6 +35,27 @@ class GraphML
 
         def after_to_xml xml
         end
+        
+        def add_datakey graphml
+        	if respond_to? "data"  
+             
+	        	 data.each{|key,data|
+	                         dataattr=data.attrs.clone
+	                         type=dataattr[:type]
+	                         if type.nil? or type!="custom"
+	                          type="string" if type.nil?
+	                          dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+	                         end
+	                         dataattr.delete :key
+	                         dataattr.delete :type
+	                         which=self.class.name.split("::").last.downcase
+	                         dataattr.merge! :id=>key,:for=>which
+	                         graphml.add_key(dataattr) unless graphml.keys.has_key? key
+	                  } 
+	         
+            end
+           elements.each{|item| item.add_datakey(graphml) if item.respond_to?("add_datakey")} if elements
+        end
 
 		def to_xml indent = ""
 			before_to_xml

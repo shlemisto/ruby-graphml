@@ -294,13 +294,14 @@ class GraphML
   end
   
   class Graph
-    attr_accessor :nodes, :edges, :hyperedges,:edgedefault,:parent,:bind
+    attr_accessor :nodes, :edges,:data, :hyperedges,:edgedefault,:parent,:bind
     include GraphML::ExtCore
     def initialize id=nil,parent=nil
       @parent=parent
       self<<{:id=>id} if id     
       @nodes = {}
       @edges = {}
+      @data={}
       @hyperedges ={}
 
     end
@@ -342,6 +343,19 @@ class GraphML
       }
       r.merge! edges
     end
+
+    def add_data datakey,text="" 
+      if datakey.is_a? GraphML::Data
+        data=datakey
+      else
+        data=Data.new datakey,text
+      end
+      data.parent=self
+      @data[data[:key]]=data
+      yield( data ) if block_given?
+      data
+    end 
+
 
     def add_node nodename
       
@@ -452,61 +466,96 @@ class GraphML
     end 
 
     def auto_key_generate
-      begin
-      nodes.each{|k,node| 
-                  node.data.each{|key,data|
-                         dataattr=data.attrs.clone
-                         type=dataattr[:type]
-                         if type.nil? or type!="custom"
-                          type="string" if type.nil?
-                          dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
-                         end
-                         dataattr.delete :key
-                         dataattr.delete :type
-                         dataattr.merge! :id=>key,:for=>"node" 
-                         add_key(dataattr) unless keys.has_key? key
-                  }
-                }  
-      rescue Exception => e
-        
-      end
+       add_datakey self
+      #  elements.each{ |item|
+      #         xml<<item.to_xml(@indent)
+      #     }
+      # begin
+      # nodes.each{|k,node| 
+      #             node.data.each{|key,data|
+      #                    dataattr=data.attrs.clone
+      #                    type=dataattr[:type]
+      #                    if type.nil? or type!="custom"
+      #                     type="string" if type.nil?
+      #                     dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+      #                    end
+      #                    dataattr.delete :key
+      #                    dataattr.delete :type
+      #                    dataattr.merge! :id=>key,:for=>"node" 
+      #                    add_key(dataattr) unless keys.has_key? key
+      #             }
 
-      begin
-      edges.each{|k,edge| 
-                  edge.data.each{|key,data|
-                                    dataattr=data.attrs.clone
-                                    type=dataattr[:type]
-                                    if type.nil? or type!="custom"
-                                     type="string" if type.nil?
-                                     dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
-                                    end
-                                    dataattr.delete :key
-                                    dataattr.delete :type
-                                    dataattr.merge! :id=>key,:for=>"edge" 
-                                    add_key(dataattr) unless keys.has_key? key
-                                }
-                }  
-      rescue Exception => e
+      #             node.subgraphs.each{|key,subgraph|
+      #                       subgraph.data.each{|key,data|
+      #                              dataattr=data.attrs.clone
+      #                              type=dataattr[:type]
+      #                              if type.nil? or type!="custom"
+      #                               type="string" if type.nil?
+      #                               dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+      #                              end
+      #                              dataattr.delete :key
+      #                              dataattr.delete :type
+      #                              dataattr.merge! :id=>key,:for=>"graph" 
+      #                              add_key(dataattr) unless keys.has_key? key
+      #                                           }                  
+      #                               }
+      #           }  
+      # rescue Exception => e
         
-      end
-      
-      begin
-      data.each{|key,data|
-                        dataattr=data.attrs.clone
-                        type=dataattr[:type]
-                        if type.nil? or type!="custom"
-                         type="string" if type.nil?
-                         dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
-                        end
-                        dataattr.delete :key
-                        dataattr.delete :type
-                        dataattr.merge! :id=>key,:for=>"graphml" 
-                        add_key(dataattr) unless keys.has_key? key
-                    }  
-      rescue Exception => e
+      # end
+
+      # begin
+      # edges.each{|k,edge| 
+      #             edge.data.each{|key,data|
+      #                               dataattr=data.attrs.clone
+      #                               type=dataattr[:type]
+      #                               if type.nil? or type!="custom"
+      #                                type="string" if type.nil?
+      #                                dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+      #                               end
+      #                               dataattr.delete :key
+      #                               dataattr.delete :type
+      #                               dataattr.merge! :id=>key,:for=>"edge" 
+      #                               add_key(dataattr) unless keys.has_key? key
+      #                           }
+      #           }  
+      # rescue Exception => e
         
-      end
-      
+      # end
+
+      # begin
+      # graph.data.each{|key,data|
+      #                   dataattr=data.attrs.clone
+      #                   type=dataattr[:type]
+      #                   if type.nil? or type!="custom"
+      #                    type="string" if type.nil?
+      #                    dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+      #                   end
+      #                   dataattr.delete :key
+      #                   dataattr.delete :type
+      #                   dataattr.merge! :id=>key,:for=>"graph" 
+      #                   add_key(dataattr) unless keys.has_key? key
+      #               }  
+      # rescue Exception => e
+        
+      # end
+
+      # begin
+      # data.each{|key,data|
+      #                   dataattr=data.attrs.clone
+      #                   type=dataattr[:type]
+      #                   if type.nil? or type!="custom"
+      #                    type="string" if type.nil?
+      #                    dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+      #                   end
+      #                   dataattr.delete :key
+      #                   dataattr.delete :type
+      #                   dataattr.merge! :id=>key,:for=>"graphml" 
+      #                   add_key(dataattr) unless keys.has_key? key
+      #               }  
+      # rescue Exception => e
+        
+      # end      
       
 
       self
