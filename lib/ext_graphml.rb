@@ -39,14 +39,14 @@ class GraphML
 
      def add_data datakey,text="" 
       if datakey.is_a? GraphML::Data
-        data=datakey
+        xdata=datakey
       else
-        data=Data.new datakey,text
+        xdata=Data.new datakey,text
       end
-      data.parent=self
-      @data[data[:key]]=data
-      yield( data ) if block_given?
-      data
+      xdata.parent=self
+      @data[xdata[:key]]=xdata
+      yield( xdata ) if block_given?
+      xdata
     end 
 
 
@@ -212,18 +212,17 @@ class GraphML
       port
     end
       
-    def add_data datakey,text="" 
+     def add_data datakey,text="" 
       if datakey.is_a? GraphML::Data
-        data=datakey
+        xdata=datakey
       else
-        data=Data.new datakey,text
+        xdata=Data.new datakey,text
       end
-      data.parent=self
-      @data[data[:key]]=data
-      yield( data ) if block_given?
-      data
+      xdata.parent=self
+      @data[xdata[:key]]=xdata
+      yield( xdata ) if block_given?
+      xdata
     end 
-
 
     def add_key_and_data keyname,data,type="string",&block
         key=graphml.get_or_new_key keyname
@@ -344,18 +343,17 @@ class GraphML
       r.merge! edges
     end
 
-    def add_data datakey,text="" 
+     def add_data datakey,text="" 
       if datakey.is_a? GraphML::Data
-        data=datakey
+        xdata=datakey
       else
-        data=Data.new datakey,text
+        xdata=Data.new datakey,text
       end
-      data.parent=self
-      @data[data[:key]]=data
-      yield( data ) if block_given?
-      data
+      xdata.parent=self
+      @data[xdata[:key]]=xdata
+      yield( xdata ) if block_given?
+      xdata
     end 
-
 
     def add_node nodename
       
@@ -584,18 +582,18 @@ class GraphML
     end
     
 
-    def add_data datakey,text="" 
+     def add_data datakey,text="" 
       if datakey.is_a? GraphML::Data
-        data=datakey
+        xdata=datakey
       else
-        data=Data.new datakey,text
+        xdata=Data.new datakey,text
       end
-      data.parent=self
-      @data[data[:key]]=data
-      yield( data ) if block_given?
-      data
+      xdata.parent=self
+      @data[xdata[:key]]=xdata
+      yield( xdata ) if block_given?
+      xdata
     end 
-
+    
     def graphml
       self
     end
