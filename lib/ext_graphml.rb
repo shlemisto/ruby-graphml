@@ -319,6 +319,7 @@ class GraphML
       e=[]
       e.concat @nodes.values
       e.concat @edges.values
+      e.concat @data.values
       e.concat @hyperedges.values 
       e.count>0 ? e : nil
     end
@@ -354,6 +355,22 @@ class GraphML
       yield( xdata ) if block_given?
       xdata
     end 
+
+    def data_by_attrname name,attr_name="attr.name"
+       k=""
+       graphml.keys.each{|id,key|
+                  
+                  attrname=key[attr_name.to_sym]
+
+                  next if attrname.nil?
+
+                  if attrname.strip==name.strip
+                    k=key[:id]
+                    break
+                  end   
+           }
+       data[k]    
+    end
 
     def add_node nodename
       
@@ -593,7 +610,7 @@ class GraphML
       yield( xdata ) if block_given?
       xdata
     end 
-    
+
     def graphml
       self
     end
