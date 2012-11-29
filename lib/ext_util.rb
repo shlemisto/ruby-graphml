@@ -30,7 +30,15 @@ class GraphML
         	nil
         end
 
+        def before_to_xml
+        end
+
+        def after_to_xml xml
+        end
+
 		def to_xml indent = ""
+			before_to_xml
+
 			defaultindent="    "
 			xml=""
 			@indent=indent+defaultindent
@@ -51,6 +59,7 @@ class GraphML
 					
 					xml<<@indent<<"</"<<classname<<">"<<"\n"
 			    end
+			after_to_xml xml
 		    xml
 	    end
 

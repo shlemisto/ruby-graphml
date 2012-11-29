@@ -1,6 +1,6 @@
 require 'ext_parser'
 require 'ext_util'
- 
+
 
 require 'rexml/document'
 include REXML
@@ -181,8 +181,8 @@ class GraphML
     def in_edges
       r=[]
       edges=graphml.edges
-      edges.each{|edge|
-               r<<edge.target if edge.target==self
+      edges.each{|key,edge|
+               r<<edge  if edge.target==self
       }
       r
     end
@@ -190,8 +190,8 @@ class GraphML
     def out_edges
       r=[]
       edges=graphml.edges
-      edges.each{|edge|
-               r<<edge.source if edge.source==self
+      edges.each{|key,edge|
+               r<<edge  if edge.source==self
       }
       r
     end
@@ -343,7 +343,6 @@ class GraphML
       r.merge! edges
     end
 
-
     def add_node nodename
       
       if nodename.is_a? GraphML::Node
@@ -438,6 +437,7 @@ class GraphML
         @graph.allsubedges if @graph
     end
 
+
     def add_graph graph_or_id
           if graph_or_id.is_a? GraphML::Graph
              graph=graph_or_id
@@ -452,6 +452,7 @@ class GraphML
     end 
 
     def auto_key_generate
+      begin
       nodes.each{|k,node| 
                   node.data.each{|key,data|
                          dataattr=data.attrs.clone
@@ -465,7 +466,12 @@ class GraphML
                          dataattr.merge! :id=>key,:for=>"node" 
                          add_key(dataattr) unless keys.has_key? key
                   }
-                }
+                }  
+      rescue Exception => e
+        
+      end
+
+      begin
       edges.each{|k,edge| 
                   edge.data.each{|key,data|
                                     dataattr=data.attrs.clone
@@ -479,10 +485,35 @@ class GraphML
                                     dataattr.merge! :id=>key,:for=>"edge" 
                                     add_key(dataattr) unless keys.has_key? key
                                 }
-                }
+                }  
+      rescue Exception => e
+        
+      end
+      
+      begin
+      data.each{|key,data|
+                        dataattr=data.attrs.clone
+                        type=dataattr[:type]
+                        if type.nil? or type!="custom"
+                         type="string" if type.nil?
+                         dataattr.merge! :"attr.name"=>key,:"attr.type"=>type
+                        end
+                        dataattr.delete :key
+                        dataattr.delete :type
+                        dataattr.merge! :id=>key,:for=>"graphml" 
+                        add_key(dataattr) unless keys.has_key? key
+                    }  
+      rescue Exception => e
+        
+      end
+      
+      
+
       self
 
     end
+
+
 
     def add_key attrs={}
       attrs={:id => attrs} if attrs.kind_of? String
