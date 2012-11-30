@@ -73,7 +73,7 @@ class GraphML
 	                    xml<<"/>"<<"\n"
 	            else	
 	            	xml<<">"
-	            	xml<<self.text  if self.respond_to?("text") and self.text
+	            	xml<<self.text.to_s  if self.respond_to?("text") and self.text
 					elements.each{ |item|
 						  xml<<item.to_xml(@indent)
 					} if elements
