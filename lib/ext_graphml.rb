@@ -635,13 +635,13 @@ class GraphML
     end
 
     def output opt={}
-       File.new(opt[:file], 'w') do |f2|  
+       File.open(opt[:file], 'w') do |f2|  
           f2.puts self.to_xml
         end 
     end 
 
     def to_file name
-       file=File.new(name, 'w') 
+       file=File.open(name, 'w') 
        file.puts self.to_xml
        file.close
        file 
