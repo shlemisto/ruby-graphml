@@ -295,9 +295,10 @@ class GraphML
   class Graph
     attr_accessor :nodes, :edges,:data, :hyperedges,:edgedefault,:parent,:bind
     include GraphML::ExtCore
-    def initialize id=nil,parent=nil
+    def initialize id=nil,parent=nil,directed=true
       @parent=parent
       self<<{:id=>id} if id     
+	  self<<{:edgedefault => "directed"} if directed
       @nodes = {}
       @edges = {}
       @data={}
